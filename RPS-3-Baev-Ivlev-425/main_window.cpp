@@ -55,7 +55,7 @@ void MainWindow::save_btn_clicked() {
 		initializeDB(_arrays); // Добавление новых данных без очистки базы
 	}
 
-	QMessageBox::information(this, "Information", "Array data saved");
+	QMessageBox::information(this, "Информация", "Данные массива сохранены");
 	// Включаем кнопку
 	_ui->save_btn->setEnabled(true);
 }
@@ -107,7 +107,7 @@ void MainWindow::load_btn_clicked() {
 		row++;
 	}
 
-	QMessageBox::information(this, "Information", "Array data loaded");
+	QMessageBox::information(this, "Информация", "Данные массива загружены");
 
 	// Включаем кнопку
 	_ui->load_btn->setEnabled(true);
@@ -128,7 +128,11 @@ void MainWindow::random_btn_clicked() {
 	// Проверка, введено ли количество массивов для генерации
 	if (number_of_arrays.isEmpty()) {
 		all_good = false;
-		QMessageBox::critical(this, "Error", "The number of arrays to generate is not entered!");
+		QMessageBox::critical(this, "Ошибка", "Количество генерируемых массивов не введено!");
+	}
+	else if (number_of_arrays.toInt()<=0) {
+		all_good = false;
+		QMessageBox::critical(this, "Ошибка", "Количество генерируемых массивов не может быть отрицательным!");
 	}
 
 	if (all_good) {
@@ -194,7 +198,7 @@ void MainWindow::sort_btn_clicked() {
 		row++;
 	}
 
-	QMessageBox::information(this, "Information", "Arrays have been sorted");
+	QMessageBox::information(this, "Информация", "Массивы отсортированы");
 
 	// Включаем кнопку
 	_ui->sort_btn->setEnabled(true);
@@ -206,7 +210,7 @@ void MainWindow::clear_database_btn_clicked() {
 
 	// Очистка базы данных
 	clearTable();
-	QMessageBox::information(this, "Information", "Database has been cleaned");
+	QMessageBox::information(this, "Информация", "База данных очищена");
 
 	// Включаем кнопку
 	_ui->clear_database_btn->setEnabled(true);
