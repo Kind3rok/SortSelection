@@ -11,6 +11,7 @@
 /// <param name="number_of_arrays"> Количество массивов для генерации. </param>
 void generateRandomArrays(std::vector<std::vector<int>>& arrays, std::vector<std::string>& change_dates, const size_t& number_of_arrays);
 
+void generateRandomArray(std::vector<std::vector<int>>& arrays, std::vector<std::string>& change_dates, const size_t& number_of_arrays, const size_t& number_of_elements);
 
 /// <summary>
 /// Сортирует массивы, хранящиеся в векторе.

@@ -5,6 +5,7 @@
 #include <QtWidgets/QApplication>
 #include "main_window.h"
 #include "database.h"
+#include <QPalette>
 
 
 int main(int argc, char* argv[]) {

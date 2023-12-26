@@ -6,6 +6,8 @@
 #include <qmessagebox.h>
 #include <QIntValidator>
 #include <iostream>
+#include <qfiledialog.h>
+#include <QPlainTextEdit>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _ui(new Ui::MainWindowClass()) {
 	// Инициализация главного окна
@@ -22,11 +24,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), _ui(new Ui::MainW
 	connect(_ui->sort_btn, &QPushButton::clicked, this, &MainWindow::sort_btn_clicked);
 	connect(_ui->clear_database_btn, &QPushButton::clicked, this, &MainWindow::clear_database_btn_clicked);
 	connect(_ui->clear_table_btn, &QPushButton::clicked, this, &MainWindow::clear_table_btn_clicked);
+	connect(_ui->load_from_file_btn, &QPushButton::clicked, this, &MainWindow::load_from_file_btn_clicked);
+	//connect(_ui->output_table, &QTableWidget::cellEntered, this, &MainWindow::showFullArrayDialog);
+	connect(_ui->output_table, &QTableWidget::cellClicked, this, &MainWindow::onCellClicked);
 
 	// Установка ширины столбцов в QTableWidget
-	_ui->output_table->setColumnWidth(Array_data, 700);
-	_ui->output_table->setColumnWidth(Change_date, 130);
-	_ui->output_table->setColumnWidth(Type, 80);
+	_ui->output_table->setColumnWidth(Array_data, 650);
+	_ui->output_table->setColumnWidth(Change_date, 160);
+	_ui->output_table->setColumnWidth(Type, 150);
 
 	// Установка режима изменения размеров секций горизонтального и вертикального заголовка
 	_ui->output_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -115,8 +120,7 @@ void MainWindow::load_btn_clicked() {
 
 void MainWindow::random_btn_clicked() {
 	bool all_good = true;
-	// Получение значения количества массивов из строки ввода
-	QString number_of_arrays = _ui->number_of_arrays->text();
+	QString number_of_elements = _ui->number_of_arrays->text();
 
 	if (!_ui->save_in_table->isChecked()) {
 		clearTableWidget(); // Очистка данных в таблице перед новой загрузкой данных
@@ -125,47 +129,44 @@ void MainWindow::random_btn_clicked() {
 	}
 
 	clearTableWidget();
-	// Проверка, введено ли количество массивов для генерации
-	if (number_of_arrays.isEmpty()) {
+	// Проверка, введено ли количество элементов в массиве
+	if (number_of_elements.isEmpty()) {
 		all_good = false;
-		QMessageBox::critical(this, "Ошибка", "Количество генерируемых массивов не введено!");
+		QMessageBox::critical(this, "Ошибка", "Количество элементов в массиве не введено!");
 	}
-	else if (number_of_arrays.toInt()<=0) {
-		all_good = false;
-		QMessageBox::critical(this, "Ошибка", "Количество генерируемых массивов не может быть отрицательным!");
+	else {
+		int elements = number_of_elements.toInt();
+		if (elements <= 0) {
+			all_good = false;
+			QMessageBox::critical(this, "Ошибка", "Количество элементов в массиве не может быть отрицательным!");
+		}
+		else if (elements > 100) {
+			all_good = false;
+			QMessageBox::critical(this, "Ошибка", "Количество элементов в массиве не может быть больше 100!");
+		}
 	}
 
 	if (all_good) {
-		generateRandomArrays(_arrays, _change_dates, number_of_arrays.toInt());
+		generateRandomArray(_arrays, _change_dates, 1, number_of_elements.toInt());
 
-		int row{};
-		// Перебор сгенерированных массивов и их добавление в таблицу
-		for (size_t i = 0; i < _arrays.size(); ++i) {
-			QString array{};
-
-			// Преобразование массива в строку
-			for (size_t j = 0; j < _arrays[i].size(); ++j) {
-				array = array + QString::number(_arrays[i][j]) + ' ';
-			}
-
-			// Вставка новой строки в таблицу
-			int rowC = _ui->output_table->rowCount(); // количество строк
-			_ui->output_table->insertRow(row); // вставка новой строки
-
-			// Заполнение ячеек таблицы данными
-			_ui->output_table->setItem(row, Array_data, new QTableWidgetItem(array));
-
-			if (!_change_dates.empty()) {
-				_ui->output_table->setItem(row, Change_date, new QTableWidgetItem(QString::fromStdString(_change_dates[i])));
-			}
-			else {
-				_ui->output_table->setItem(row, Change_date, new QTableWidgetItem(QString::fromStdString(getCurrentDateAndTime())));
-			}
-
-			_ui->output_table->setItem(row, Type, new QTableWidgetItem(QString::fromStdString(getArrayType(_arrays[i]))));
-
-			row++;
+		QString array_string{};
+		for (int i = 0; i < _arrays.back().size(); ++i) {
+			array_string += QString::number(_arrays.back()[i]) + ' ';
 		}
+
+		int row = _ui->output_table->rowCount(); // количество строк
+		_ui->output_table->insertRow(row); // вставка новой строки
+
+		_ui->output_table->setItem(row, Array_data, new QTableWidgetItem(array_string));
+
+		if (!_change_dates.empty()) {
+			_ui->output_table->setItem(row, Change_date, new QTableWidgetItem(QString::fromStdString(_change_dates.back())));
+		}
+		else {
+			_ui->output_table->setItem(row, Change_date, new QTableWidgetItem(QString::fromStdString(getCurrentDateAndTime())));
+		}
+
+		_ui->output_table->setItem(row, Type, new QTableWidgetItem(QString::fromStdString(getArrayType(_arrays.back()))));
 	}
 }
 
@@ -204,6 +205,84 @@ void MainWindow::sort_btn_clicked() {
 	_ui->sort_btn->setEnabled(true);
 }
 
+void MainWindow::load_from_file_btn_clicked() {
+	// Открываем диалог выбора файла
+	QString filePath = QFileDialog::getOpenFileName(this, "Выберите файл с массивами", "", "Текстовые файлы (*.txt)");
+
+	if (filePath.isEmpty()) {
+		// Пользователь отменил выбор файла
+		return;
+	}
+
+	// Открываем файл для чтения
+	QFile file(filePath);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		QMessageBox::critical(this, "Ошибка", "Не удалось открыть файл");
+		return;
+	}
+
+	// Очищаем данные перед загрузкой
+	clearTableWidget();
+	_arrays.clear();
+	_change_dates.clear();
+
+	QTextStream in(&file);
+	while (!in.atEnd()) {
+		QString line = in.readLine();
+		QStringList stringList = line.split(" ", Qt::SkipEmptyParts);
+
+		// Проверяем, что в массиве минимум 3 элемента
+		if (stringList.size() < 3) {
+			QMessageBox::critical(this, "Ошибка", "Массив содержит менее 3 элементов");
+			return;
+		}
+
+		std::vector<int> array;
+
+		for (const QString& numStr : stringList) {
+			bool ok;
+			int num = numStr.toInt(&ok);
+
+			// Проверяем, что числа в массиве в допустимом диапазоне
+			if (!ok || num < -1000 || num > 1000) {
+				QMessageBox::critical(this, "Ошибка", "Числа в массиве должны быть в диапазоне от -1000 до 1000");
+				return;
+			}
+
+			array.push_back(num);
+		}
+
+		_arrays.push_back(std::move(array));
+	}
+
+	file.close();
+
+	// Загрузка данных в таблицу
+	int row = 0;
+	for (const auto& array : _arrays) {
+		QString arrayStr;
+		for (int num : array) {
+			arrayStr = arrayStr + QString::number(num) + ' ';
+		}
+
+		_ui->output_table->insertRow(row);
+		_ui->output_table->setItem(row, Array_data, new QTableWidgetItem(arrayStr));
+
+		if (!_change_dates.empty()) {
+			_ui->output_table->setItem(row, Change_date, new QTableWidgetItem(QString::fromStdString(_change_dates[row])));
+		}
+		else {
+			_ui->output_table->setItem(row, Change_date, new QTableWidgetItem(QString::fromStdString(getCurrentDateAndTime())));
+		}
+
+		_ui->output_table->setItem(row, Type, new QTableWidgetItem(QString::fromStdString(getArrayType(_arrays[row]))));
+
+		row++;
+	}
+
+	QMessageBox::information(this, "Информация", "Данные массива из файла загружены");
+}
+
 void MainWindow::clear_database_btn_clicked() {
 	// Выключаем кнопку
 	_ui->clear_database_btn->setEnabled(false);
@@ -239,3 +318,25 @@ void MainWindow::clearTableWidget() {
 		_ui->output_table->setItem(row, 0, item);
 	}
 }
+
+void MainWindow::showFullArrayDialog(const QString& arrayStr) {
+	QDialog* fullArrayDialog = new QDialog(this);
+	fullArrayDialog->setWindowTitle("Полный массив");
+	fullArrayDialog->setMinimumWidth(300);
+
+	QVBoxLayout* layout = new QVBoxLayout(fullArrayDialog);
+	QLabel* arrayLabel = new QLabel(arrayStr, fullArrayDialog);
+	arrayLabel->setWordWrap(true);
+	layout->addWidget(arrayLabel);
+
+	fullArrayDialog->exec();
+}
+
+void MainWindow::onCellClicked(int row, int column) {
+	QTableWidgetItem* item = _ui->output_table->item(row, column);
+	if (item) {
+		QString arrayStr = item->text();
+		showFullArrayDialog(arrayStr);
+	}
+}
+

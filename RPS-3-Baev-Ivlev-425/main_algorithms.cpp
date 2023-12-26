@@ -2,7 +2,39 @@
 #include "selection_sort.h"
 #include "database.h"
 
-void generateRandomArrays(std::vector<std::vector<int>> &arrays, std::vector<std::string>& change_dates, const size_t &number_of_arrays) {
+void generateRandomArray(std::vector<std::vector<int>>& arrays, std::vector<std::string>& change_dates, const size_t& number_of_arrays, const size_t& number_of_elements) {
+
+    std::string change_date{};
+    arrays.resize(number_of_arrays);
+
+    for (int i = 0; i < number_of_arrays; i++) {
+
+        arrays[i].resize(number_of_elements);
+
+        for (int j = 0; j < number_of_elements; j++) {
+            arrays[i][j] = getRandInt(LOW_BOUND_FOR_RANDOM, UP_BOUND_FOR_RANDOM);
+        }
+
+        change_date = getCurrentDateAndTime();
+
+        change_dates.push_back(change_date);
+    }
+}
+
+void startSorting(std::vector<std::vector<int>> &arrays) {
+    // Вычисляем количество массивов
+    size_t number_of_arrays = arrays.size();
+
+    // Создание и инициализация объекта, производящего сортировку выбором
+    SelectionSort selection_sort{};
+
+    // Внешний цикл, отвечающий за количество массивов
+    for (size_t i = 0; i < number_of_arrays; i++) {
+        // Сортировка отдельных массивов
+        selection_sort.sort(arrays[i]);
+    }
+}
+void generateRandomArrays(std::vector<std::vector<int>>& arrays, std::vector<std::string>& change_dates, const size_t& number_of_arrays) {
     size_t amount_of_elements{};
     std::vector<std::vector<int>> new_arrays{};
     std::string change_date{};
@@ -29,20 +61,5 @@ void generateRandomArrays(std::vector<std::vector<int>> &arrays, std::vector<std
 
         // Добавление даты в вектор дат
         change_dates.push_back(change_date);
-    }
-}
-
-
-void startSorting(std::vector<std::vector<int>> &arrays) {
-    // Вычисляем количество массивов
-    size_t number_of_arrays = arrays.size();
-
-    // Создание и инициализация объекта, производящего сортировку выбором
-    SelectionSort selection_sort{};
-
-    // Внешний цикл, отвечающий за количество массивов
-    for (size_t i = 0; i < number_of_arrays; i++) {
-        // Сортировка отдельных массивов
-        selection_sort.sort(arrays[i]);
     }
 }

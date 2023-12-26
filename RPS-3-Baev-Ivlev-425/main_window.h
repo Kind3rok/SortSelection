@@ -1,7 +1,9 @@
 ﻿#ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
-
+#include <QDialog>
+#include <QTableWidget>
+#include <QVBoxLayout>
 #include <QMainWindow>
 #include "ui_main_window.h"
 
@@ -43,6 +45,11 @@ private slots:
 	void sort_btn_clicked();
 
 	/// <summary>
+	/// Слот-функция, реагирующая на нажатие кнопки загрузки массивов из файла. Загружает данные из файла в таблицу.
+	/// </summary>
+	void load_from_file_btn_clicked();
+
+	/// <summary>
 	/// Слот-функция, реагирующая на нажатие кнопки очистки базы. Очищает базу данных.
 	/// </summary>
 	void clear_database_btn_clicked();
@@ -52,10 +59,15 @@ private slots:
 	/// </summary>
 	void clear_table_btn_clicked();
 
+	void onCellClicked(int row, int column);
+
+	void showFullArrayDialog(const QString& arrayStr);
+
 private:
 	Ui::MainWindowClass *_ui;
 	std::vector<std::vector<int>> _arrays{}; // хранит массивы
 	std::vector<std::string> _change_dates{}; // хранит даты
+
 };
 
 
